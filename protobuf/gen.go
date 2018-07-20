@@ -172,15 +172,31 @@ func writeDocs(buf *bytes.Buffer, docs []string, indent bool) {
 }
 
 func writeService(buf *bytes.Buffer, pkg *Package) {
-	buf.WriteString(fmt.Sprintf("service %s {\n", pkg.ServiceName()))
+	services := map[string][]*RPC{}
+
 	for _, rpc := range pkg.RPCs {
-		writeDocs(buf, rpc.Docs, true)
-		buf.WriteString(fmt.Sprintf(
-			"\trpc %s (%s) returns (%s);\n",
-			rpc.Name,
-			rpc.Input,
-			rpc.Output,
-		))
+		servName := pkg.ServiceName()
+		if rpc.Recv != "" {
+			servName = rpc.Recv
+		}
+		if services[servName] == nil {
+			services[servName] = []*RPC{rpc}
+		} else {
+			services[servName] = append(services[servName], rpc)
+		}
 	}
-	buf.WriteString("}\n\n")
+
+	for name, rpcs := range services {
+		buf.WriteString(fmt.Sprintf("service %s {\n", name))
+		for _, rpc := range rpcs {
+			writeDocs(buf, rpc.Docs, true)
+			buf.WriteString(fmt.Sprintf(
+				"\trpc %s (%s) returns (%s);\n",
+				rpc.Name,
+				rpc.Input,
+				rpc.Output,
+			))
+		}
+		buf.WriteString("}\n\n")
+	}
 }

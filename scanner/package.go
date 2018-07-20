@@ -316,3 +316,11 @@ type Func struct {
 	// IsVariadic will be true if the last input parameter is variadic.
 	IsVariadic bool
 }
+
+type Interface struct {
+	Docs
+	Generate   bool
+	Name       string
+	Methods    []*Func
+	IsStringer bool
+}

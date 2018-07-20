@@ -159,6 +159,12 @@ func (p *Package) scanObject(ctx *context, o types.Object) error {
 				ctx.trySetDocs(o.Name(), st)
 				p.Structs = append(p.Structs, st)
 				return nil
+			} else if i, ok := t.Underlying().(*types.Interface); ok {
+				fns := scanInterface(i)
+				for _, fn := range fns {
+					fmt.Println(fn.Name)
+				}
+				p.Funcs = append(p.Funcs, fns...)
 			}
 
 			p.Aliases[objName(t.Obj())] = scanType(t.Underlying())
@@ -233,9 +239,17 @@ func scanType(typ types.Type) (t Type) {
 		)
 	case *types.Slice:
 		t = scanType(u.Elem())
+		if t == nil {
+			report.Warn("ignoring slice with type %s", typ.String())
+			return nil
+		}
 		t.SetRepeated(true)
 	case *types.Array:
 		t = scanType(u.Elem())
+		if t == nil {
+			report.Warn("ignoring array with type %s", typ.String())
+			return nil
+		}
 		t.SetRepeated(true)
 	case *types.Pointer:
 		t = scanType(u.Elem())
@@ -303,6 +317,21 @@ func scanStruct(s *Struct, elem *types.Struct) *Struct {
 	}
 
 	return s
+}
+
+func scanInterface(elem *types.Interface) []*Func {
+	funcs := []*Func{}
+
+	for i := 0; i < elem.NumMethods(); i++ {
+		v := elem.Method(i)
+		s := v.Type().(*types.Signature)
+
+		f := scanFunc(&Func{Name: v.Name()}, s)
+
+		funcs = append(funcs, f)
+	}
+
+	return funcs
 }
 
 func scanFunc(fn *Func, signature *types.Signature) *Func {
