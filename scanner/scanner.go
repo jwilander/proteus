@@ -161,9 +161,6 @@ func (p *Package) scanObject(ctx *context, o types.Object) error {
 				return nil
 			} else if i, ok := t.Underlying().(*types.Interface); ok {
 				fns := scanInterface(i)
-				for _, fn := range fns {
-					fmt.Println(fn.Name)
-				}
 				p.Funcs = append(p.Funcs, fns...)
 			}
 
@@ -262,6 +259,9 @@ func scanType(typ types.Type) (t Type) {
 			return nil
 		}
 		t = NewMap(key, val)
+	case *types.Interface:
+		t = NewBasic("interface{}")
+		t.SetNullable(true)
 	default:
 		report.Warn("ignoring type %s", typ.String())
 		return nil

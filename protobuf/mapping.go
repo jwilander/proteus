@@ -176,6 +176,12 @@ var DefaultMappings = TypeMappings{
 			},
 		),
 	},
+	"interface{}": &ProtoType{
+		Name:     "Any",
+		Package:  "google.protobuf",
+		Import:   "google/protobuf/any.proto",
+		GoImport: "github.com/golang/protobuf/ptypes/any",
+	},
 }
 
 // ToGoOutPath returns the set of import mappings for the --go_out family of options.
